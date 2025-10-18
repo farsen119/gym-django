@@ -1,0 +1,77 @@
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+    color: var(--white);
+    padding: 100px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-icon {
+    font-size: 15rem;
+    opacity: 0.3;
+    color: var(--white);
+}
+
+.features-section {
+    padding: 80px 0;
+    background: var(--white);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.feature-icon:hover {
+    transform: scale(1.1);
+}
+
+.stats-section {
+    background: var(--light-color);
+    padding: 60px 0;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+    display: block;
+    margin-bottom: 10px;
+}
+
+.cta-section {
+    background: linear-gradient(135deg, var(--secondary-color), #c0392b);
+    color: var(--white);
+    padding: 80px 0;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0;
+    }
+    
+    .hero-icon {
+        font-size: 8rem;
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+}
