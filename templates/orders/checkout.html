@@ -1,0 +1,862 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - GymStore{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/home.css' %}" rel="stylesheet">
+<style>
+.checkout-container {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.checkout-header {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.order-summary {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 1rem;
+}
+
+.order-item-details {
+    flex: 1;
+}
+
+.order-item-title {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.order-item-meta {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.order-item-price {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.checkout-form {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.payment-summary {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.summary-label {
+    color: var(--text-color);
+}
+
+.summary-value {
+    font-weight: 600;
+}
+
+.checkout-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.checkout-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .order-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .order-item-image {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="container">
+        <!-- Checkout Header -->
+        <div class="checkout-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Checkout
+                    </h1>
+                    <p class="text-muted mb-0">Complete your order</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'cart:view_cart' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Checkout Form -->
+            <div class="col-lg-8">
+                <div class="checkout-form">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h3 class="form-title">
+                                <i class="fas fa-shipping-fast me-2"></i>Shipping Information
+                            </h3>
+                            <p class="form-subtitle">Enter your delivery details</p>
+                        </div>
+                    
+                    <form method="post" id="checkoutForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Full Name</label>
+                                    <div class="editable-field">
+                                        <input type="text" class="form-control" id="fullname-display" value="{{ user.first_name }} {{ user.last_name }}" readonly>
+                                        <button class="edit-btn" onclick="toggleEditField('fullname')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="save-btn d-none" onclick="saveField('fullname')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="cancel-btn d-none" onclick="cancelEditField('fullname')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <div class="editable-field">
+                                        <input type="email" class="form-control" id="email-display" value="{{ user.email }}" readonly>
+                                        <button class="edit-btn" onclick="toggleEditField('email')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="save-btn d-none" onclick="saveField('email')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="cancel-btn d-none" onclick="cancelEditField('email')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Phone Number</label>
+                                    <div class="editable-field">
+                                        <input type="tel" class="form-control" id="phone-display" value="{{ user.phone_number|default:'Not provided' }}" readonly>
+                                        <button class="edit-btn" onclick="toggleEditField('phone')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="save-btn d-none" onclick="saveField('phone')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="cancel-btn d-none" onclick="cancelEditField('phone')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">City</label>
+                                    <div class="editable-field">
+                                        <input type="text" class="form-control" id="city-display" value="{{ user.city|default:'Not provided' }}" readonly>
+                                        <button class="edit-btn" onclick="toggleEditField('city')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="save-btn d-none" onclick="saveField('city')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="cancel-btn d-none" onclick="cancelEditField('city')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <div class="editable-field">
+                                <textarea class="form-control" id="address-display" rows="3" readonly>{{ user.address|default:'Not provided' }}</textarea>
+                                <button class="edit-btn" onclick="toggleEditField('address')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="save-btn d-none" onclick="saveField('address')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="cancel-btn d-none" onclick="cancelEditField('address')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Postal Code</label>
+                                    <div class="editable-field">
+                                        <input type="text" class="form-control" id="postal-display" value="{{ user.postal_code|default:'Not provided' }}" readonly>
+                                        <button class="edit-btn" onclick="toggleEditField('postal')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="save-btn d-none" onclick="saveField('postal')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="cancel-btn d-none" onclick="cancelEditField('postal')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Country</label>
+                                    <div class="editable-field">
+                                        <input type="text" class="form-control" id="country-display" value="India" readonly>
+                                        <button class="edit-btn" onclick="toggleEditField('country')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="save-btn d-none" onclick="saveField('country')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="cancel-btn d-none" onclick="cancelEditField('country')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                <label class="form-check-label" for="termsCheck">
+                                    I agree to the <a href="#" class="text-primary">Terms and Conditions</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="checkout-btn" id="checkoutBtn">
+                            <i class="fas fa-credit-card me-2"></i>Proceed to Payment
+                        </button>
+                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="order-summary-card">
+                    <div class="summary-header">
+                        <h3 class="summary-title">
+                            <i class="fas fa-shopping-bag me-2"></i>Order Summary
+                        </h3>
+                        <div class="item-count">{{ cart_items|length }} item{{ cart_items|length|pluralize }}</div>
+                    </div>
+                    
+                    <div class="order-items">
+                        {% for item in cart_items %}
+                        <div class="order-item">
+                            <div class="item-image">
+                                {% if item.product.primary_image %}
+                                    <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <div class="no-image">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <h4 class="item-name">{{ item.product.name }}</h4>
+                                <p class="item-meta">{{ item.product.category.name }} • {{ item.product.brand.name }}</p>
+                                <div class="item-quantity">Qty: {{ item.quantity }}</div>
+                            </div>
+                            <div class="item-price">₹{{ item.total_price }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span class="total-label">Subtotal</span>
+                            <span class="total-value">₹{{ subtotal }}</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Shipping</span>
+                            <span class="total-value shipping">Free</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Tax (8%)</span>
+                            <span class="total-value">₹{{ tax_amount }}</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span class="total-label">Total</span>
+                            <span class="total-value">₹{{ total_amount }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('checkoutBtn');
+    const originalText = btn.innerHTML;
+    
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    // Submit form
+    this.submit();
+});
+
+
+// Shipping Information Editing Functions
+function toggleEditField(fieldName) {
+    const inputElement = document.getElementById(fieldName + '-display');
+    const editBtn = inputElement.parentElement.querySelector('.edit-btn');
+    const saveBtn = inputElement.parentElement.querySelector('.save-btn');
+    const cancelBtn = inputElement.parentElement.querySelector('.cancel-btn');
+    
+    // Store original value
+    inputElement.dataset.originalValue = inputElement.value;
+    
+    // Make input editable
+    inputElement.removeAttribute('readonly');
+    inputElement.focus();
+    inputElement.select();
+    
+    // Hide edit button, show save/cancel buttons
+    editBtn.classList.add('d-none');
+    saveBtn.classList.remove('d-none');
+    cancelBtn.classList.remove('d-none');
+}
+
+function cancelEditField(fieldName) {
+    const inputElement = document.getElementById(fieldName + '-display');
+    const editBtn = inputElement.parentElement.querySelector('.edit-btn');
+    const saveBtn = inputElement.parentElement.querySelector('.save-btn');
+    const cancelBtn = inputElement.parentElement.querySelector('.cancel-btn');
+    
+    // Restore original value
+    inputElement.value = inputElement.dataset.originalValue;
+    
+    // Make input readonly again
+    inputElement.setAttribute('readonly', 'readonly');
+    
+    // Show edit button, hide save/cancel buttons
+    editBtn.classList.remove('d-none');
+    saveBtn.classList.add('d-none');
+    cancelBtn.classList.add('d-none');
+}
+
+function saveField(fieldName) {
+    const inputElement = document.getElementById(fieldName + '-display');
+    const editBtn = inputElement.parentElement.querySelector('.edit-btn');
+    const saveBtn = inputElement.parentElement.querySelector('.save-btn');
+    const cancelBtn = inputElement.parentElement.querySelector('.cancel-btn');
+    
+    // Validate the field
+    if (fieldName === 'email' && inputElement.value && !isValidEmail(inputElement.value)) {
+        alert('Please enter a valid email address');
+        return;
+    }
+    
+    if (fieldName === 'phone' && inputElement.value && !isValidPhone(inputElement.value)) {
+        alert('Please enter a valid phone number');
+        return;
+    }
+    
+    // Make input readonly again
+    inputElement.setAttribute('readonly', 'readonly');
+    
+    // Show edit button, hide save/cancel buttons
+    editBtn.classList.remove('d-none');
+    saveBtn.classList.add('d-none');
+    cancelBtn.classList.add('d-none');
+    
+    // Show success message
+    showFieldSuccess(fieldName);
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function isValidPhone(phone) {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ''));
+}
+
+function showFieldSuccess(fieldName) {
+    const inputElement = document.getElementById(fieldName + '-display');
+    const originalBorder = inputElement.style.border;
+    const originalBackground = inputElement.style.backgroundColor;
+    
+    // Show success styling
+    inputElement.style.border = '2px solid var(--success)';
+    inputElement.style.backgroundColor = '#f0fdf4';
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+        inputElement.style.border = originalBorder;
+        inputElement.style.backgroundColor = originalBackground;
+    }, 2000);
+}
+</script>
+
+<style>
+/* Modern Checkout Design */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --success: #10b981;
+    --danger: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --white: #ffffff;
+}
+
+/* Form Card */
+.form-card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 2rem;
+    border: 1px solid var(--gray-200);
+}
+
+.form-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.form-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.form-subtitle {
+    color: var(--gray-600);
+    margin: 0.5rem 0 0 0;
+    font-size: 0.95rem;
+}
+
+/* Order Summary Card */
+.order-summary-card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    position: sticky;
+    top: 2rem;
+}
+
+.summary-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--white);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.summary-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.item-count {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Order Items */
+.order-items {
+    padding: 1.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.item-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image {
+    width: 100%;
+    height: 100%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+    font-size: 1.2rem;
+}
+
+.item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+}
+
+.item-meta {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin: 0 0 0.25rem 0;
+}
+
+.item-quantity {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.item-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+/* Order Totals */
+.order-totals {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.total-label {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.total-value {
+    font-size: 0.9rem;
+    color: var(--gray-900);
+    font-weight: 600;
+}
+
+.total-value.shipping {
+    color: var(--success);
+}
+
+.total-final {
+    border-top: 1px solid var(--gray-200);
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+}
+
+.total-final .total-label {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.total-final .total-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Editable Fields */
+.editable-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.editable-field .form-control {
+    flex: 1;
+    margin-right: 8px;
+}
+
+.edit-btn, .save-btn, .cancel-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-btn {
+    color: var(--gray-500);
+    background: var(--gray-100);
+}
+
+.edit-btn:hover {
+    color: var(--primary);
+    background: var(--gray-200);
+}
+
+.save-btn {
+    color: var(--success);
+    background: #f0fdf4;
+}
+
+.save-btn:hover {
+    background: var(--success);
+    color: white;
+}
+
+.cancel-btn {
+    color: var(--danger);
+    background: #fef2f2;
+}
+
+.cancel-btn:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: var(--white);
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
+
+.form-control[readonly] {
+    background-color: var(--gray-50);
+    color: var(--gray-600);
+    border-color: var(--gray-200);
+}
+
+.form-control[readonly]:focus {
+    background-color: var(--white);
+    color: var(--gray-900);
+    border-color: var(--primary);
+}
+
+/* Checkout Button */
+.checkout-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--white);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.checkout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(37, 99, 235, 0.4);
+}
+
+.checkout-btn:disabled {
+    opacity: 0.7;
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .order-summary-card {
+        position: static;
+    }
+    
+    .order-item {
+        gap: 0.75rem;
+    }
+    
+    .item-image {
+        width: 50px;
+        height: 50px;
+    }
+}
+</style>
+{% endblock %}

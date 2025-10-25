@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Product List - GymStore Admin{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/admin.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="admin-content">
+                <div class="admin-header">
+                    <h2><i class="fas fa-box me-2"></i>Product Management</h2>
+                    <p class="text-muted">Manage your gym equipment products</p>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <a href="{% url 'product:add_product' %}" class="quick-action-btn">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Product</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'product:add_category' %}" class="quick-action-btn">
+                            <i class="fas fa-list"></i>
+                            <span>Add Category</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'product:add_brand' %}" class="quick-action-btn">
+                            <i class="fas fa-copyright"></i>
+                            <span>Add Brand</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'accounts:admin_dashboard' %}" class="quick-action-btn">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="admin-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list me-2"></i>All Products ({{ products.count }})</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>Brand</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr>
+                                        <td>{{ product.id }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if product.primary_image %}
+                                                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;">
+                                                {% else %}
+                                                    <div class="me-2 bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 5px;">
+                                                        <i class="fas fa-image text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ product.name }}</strong>
+                                                    {% if product.is_featured %}
+                                                        <span class="badge bg-warning ms-1">Featured</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ product.category.name }}</td>
+                                        <td>{{ product.brand.name }}</td>
+                                        <td>₹{{ product.price }}</td>
+                                        <td>
+                                            {% if product.is_in_stock %}
+                                                <span class="badge bg-success">{{ product.stock_quantity }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Out of Stock</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if product.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ product.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'product:edit_product' product.id %}" class="btn btn-sm btn-outline-primary" title="Edit Product">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'product:manage_images' product.id %}" class="btn btn-sm btn-outline-info" title="Manage Images">
+                                                    <i class="fas fa-images"></i>
+                                                </a>
+                                                <a href="{% url 'product:delete_product' product.id %}" class="btn btn-sm btn-outline-danger" title="Delete Product">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted">
+                                            <i class="fas fa-box-open fa-3x mb-3"></i>
+                                            <p>No products found. <a href="{% url 'product:add_product' %}">Add your first product</a></p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - GymStore{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/home.css' %}" rel="stylesheet">
+<style>
+.cart-container {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.cart-header {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.cart-item {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.cart-item-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.cart-item-details {
+    padding: 1.5rem;
+}
+
+.cart-item-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.cart-item-price {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.cart-item-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.meta-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.category-badge {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.brand-badge {
+    background: var(--accent-color);
+    color: white;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-input {
+    width: 60px;
+    text-align: center;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.5rem;
+    font-weight: 600;
+}
+
+.quantity-btn {
+    width: 35px;
+    height: 35px;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.quantity-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.cart-summary {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    padding: 2rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.summary-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.summary-label {
+    color: var(--text-color);
+}
+
+.summary-value {
+    font-weight: 600;
+}
+
+.checkout-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.empty-cart {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.empty-cart-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.empty-cart-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+}
+
+.empty-cart-text {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 2rem;
+}
+
+.continue-shopping-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.continue-shopping-btn:hover {
+    background: var(--secondary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+    .cart-item {
+        flex-direction: column;
+    }
+    
+    .cart-item-image {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .quantity-controls {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .cart-summary {
+        position: static;
+        margin-top: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <div class="container">
+        <!-- Cart Header -->
+        <div class="cart-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
+                    </h1>
+                    <p class="text-muted mb-0">Review your items before checkout</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'product:product_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if cart_items %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <a href="{% url 'product:product_detail' item.product.id %}">
+                                {% if item.product.primary_image %}
+                                    <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" class="cart-item-image">
+                                {% else %}
+                                    <div class="cart-item-image d-flex align-items-center justify-content-center bg-light">
+                                        <i class="fas fa-image fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="cart-item-details">
+                                <h5 class="cart-item-title">
+                                    <a href="{% url 'product:product_detail' item.product.id %}" class="text-decoration-none text-dark">
+                                        {{ item.product.name }}
+                                    </a>
+                                </h5>
+                                <div class="cart-item-meta">
+                                    <span class="meta-badge category-badge">{{ item.product.category.name }}</span>
+                                    <span class="meta-badge brand-badge">{{ item.product.brand.name }}</span>
+                                </div>
+                                <div class="cart-item-price">₹{{ item.product.price }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex flex-column align-items-end">
+                                <!-- Quantity Controls -->
+                                <div class="quantity-controls mb-3">
+                                    <form method="post" action="{% url 'cart:update_cart_item' item.id %}" class="d-flex align-items-center">
+                                        {% csrf_token %}
+                                        <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" class="quantity-btn">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" value="{{ item.quantity }}" min="1" class="quantity-input" readonly>
+                                        <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" class="quantity-btn">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <!-- Item Total -->
+                                <div class="text-end mb-3">
+                                    <div class="h5 text-primary mb-0">₹{{ item.total_price }}</div>
+                                    <small class="text-muted">{{ item.quantity }} × ₹{{ item.product.price }}</small>
+                                </div>
+                                
+                                <!-- Remove Button -->
+                                <a href="{% url 'cart:remove_from_cart' item.id %}" class="remove-btn" 
+                                   onclick="return confirm('Are you sure you want to remove this item?')">
+                                    <i class="fas fa-trash me-1"></i>Remove
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="cart-summary">
+                    <h3 class="summary-title">Order Summary</h3>
+                    
+                    <div class="summary-item">
+                        <span class="summary-label">Items ({{ cart.total_items }})</span>
+                        <span class="summary-value">₹{{ cart.total_price }}</span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <span class="summary-label">Shipping</span>
+                        <span class="summary-value">Free</span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <span class="summary-label">Tax</span>
+                        <span class="summary-value">₹0.00</span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <span class="summary-label">Total</span>
+                        <span class="summary-value">₹{{ cart.total_price }}</span>
+                    </div>
+                    
+                    <a href="{% url 'orders:checkout' %}" class="checkout-btn" style="text-decoration: none; display: block;">
+                        <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                    </a>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'cart:clear_cart' %}" class="text-danger text-decoration-none" 
+                           onclick="return confirm('Are you sure you want to clear your cart?')">
+                            <i class="fas fa-trash me-1"></i>Clear Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty Cart -->
+        <div class="empty-cart">
+            <div class="empty-cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h2 class="empty-cart-title">Your cart is empty</h2>
+            <p class="empty-cart-text">Looks like you haven't added any items to your cart yet.</p>
+            <a href="{% url 'product:product_list' %}" class="continue-shopping-btn">
+                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

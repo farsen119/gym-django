@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - GymStore{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/home.css' %}" rel="stylesheet">
+<style>
+.filter-sidebar {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    height: fit-content;
+}
+
+.filter-section {
+    margin-bottom: 2rem;
+}
+
+.filter-section h6 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+}
+
+.filter-checkbox {
+    margin-bottom: 0.5rem;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.product-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.product-image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.product-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image-container img {
+    transform: scale(1.05);
+}
+
+.no-image-placeholder {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.product-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+}
+
+.search-bar {
+    background: white;
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    width: 100%;
+    padding: 0.5rem;
+}
+
+.search-bar button {
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <form method="GET" id="filterForm">
+                <div class="filter-sidebar">
+                    <h5 class="mb-4"><i class="fas fa-filter me-2"></i>Filters</h5>
+                    
+                    <!-- Search -->
+                    <div class="filter-section">
+                        <h6>Search</h6>
+                        <div class="search-bar d-flex align-items-center">
+                            <input type="text" name="search" placeholder="Search products..." value="{% if current_search and current_search != 'None' %}{{ current_search }}{% endif %}" class="form-control">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="filter-section">
+                        <h6>Categories</h6>
+                        <select name="category" class="form-select form-select-sm">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if current_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }} ({{ category.products.count }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Brands -->
+                    <div class="filter-section">
+                        <h6>Brands</h6>
+                        <select name="brand" class="form-select form-select-sm">
+                            <option value="">All Brands</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}" {% if current_brand == brand.id|stringformat:"s" %}selected{% endif %}>
+                                {{ brand.name }} ({{ brand.products.count }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="filter-section">
+                        <h6>Price Range</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="number" name="min_price" class="form-control form-control-sm" placeholder="Min" value="{{ current_min_price }}">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="max_price" class="form-control form-control-sm" placeholder="Max" value="{{ current_max_price }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    
+                    <!-- Test button -->
+                    
+                    
+                    <a href="{% url 'product:product_list' %}" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="fas fa-times me-2"></i>Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Products -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-box me-2"></i>All Products</h2>
+                <div class="d-flex gap-2">
+                    <form method="GET" class="d-flex gap-2">
+                        <!-- Preserve current filters -->
+                        {% if current_search and current_search != 'None' %}<input type="hidden" name="search" value="{{ current_search }}">{% endif %}
+                        {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}">{% endif %}
+                        {% if current_brand %}<input type="hidden" name="brand" value="{{ current_brand }}">{% endif %}
+                        {% if current_min_price %}<input type="hidden" name="min_price" value="{{ current_min_price }}">{% endif %}
+                        {% if current_max_price %}<input type="hidden" name="max_price" value="{{ current_max_price }}">{% endif %}
+                        
+                        <select name="sort" class="form-select" onchange="this.form.submit()">
+                            <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                            <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Oldest First</option>
+                            <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name A-Z</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            <div class="product-grid" id="productGrid">
+                {% for product in products %}
+                <div class="product-card" data-category="{{ product.category.id }}" data-brand="{{ product.brand.id }}" data-price="{{ product.price }}" data-name="{{ product.name|lower }}">
+                    <div class="product-image-container">
+                        {% if product.primary_image %}
+                            <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-image fa-3x"></i>
+                                <p>No Image</p>
+                            </div>
+                        {% endif %}
+                        {% if product.is_featured %}
+                            <div class="product-badge">
+                                <span class="badge bg-warning">Featured</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-dark">{{ product.name }}</h5>
+                        <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h5 text-primary mb-0">₹{{ product.price }}</span>
+                                <div>
+                                    <span class="badge bg-secondary me-1">{{ product.category.name }}</span>
+                                    <span class="badge bg-light text-dark">{{ product.brand.name }}</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                {% if user.is_authenticated %}
+                                        <button class="btn btn-primary flex-fill add-to-cart-btn" data-product-id="{{ product.id }}">
+                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                        </button>
+                                {% else %}
+                                    <a href="{% url 'accounts:login' %}" class="btn btn-primary flex-fill">
+                                        <i class="fas fa-shopping-cart me-2"></i>Login to Add
+                                    </a>
+                                {% endif %}
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No products found</h4>
+                    <p class="text-muted">Try adjusting your filters or check back later for new products.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
